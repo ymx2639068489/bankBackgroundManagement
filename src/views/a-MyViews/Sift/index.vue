@@ -1,36 +1,58 @@
 <template>
-  <el-container>
-    <el-header>
-      <b>{{ $store.getters.getCurrentActive.activity_name }}</b> 筛选配置
-    </el-header>
-    <el-container>
-      <el-aside width="400px">
-        <left :filter-list="filterList" />
-      </el-aside>
-      <el-main>
-        <h3 class="yiy">选择新规则</h3>
-        <right :current-filter-list="filterList" @addItem="addItem" />
-      </el-main>
-    </el-container>
-  </el-container>
+  <div>
+    添加节点：
+    <el-cascader
+      v-model="value"
+      clearable
+      :options="options"
+      @change="handleChange"
+    />
+    <el-button
+      type="primary"
+      @click="btnClick"
+    >111</el-button>
+    <el-button
+      type="primary"
+      @click="surehandler"
+    >确定筛选规则</el-button>
+    <butterfly-vue
+      :canvas-data="mockData"
+      style="height: 90vh;"
+      @deleteItem="deleteItem"
+    />
+  </div>
 </template>
 
 <script>
+import 'butterfly-dag/pack/index.css'
 import {
-  getFilterListByActivityID
+  mockData,
+  addNode,
+  delNode,
+  addEdge,
+  addRootNode,
+  initData
+} from './data'
+import { ButterflyVue } from 'butterfly-vue'
+
+import {
+  getTbaleName,
+  getFieldList,
+  sureSift,
+  getFilterTree,
+  finishFilterConfiguration
 } from '@/api/sift'
-import left from './ChildCpm/left'
-import right from './ChildCpm/right'
+
 export default {
   components: {
-    left,
-    right
+    ButterflyVue
   },
   data() {
     return {
-      activity_id: '',
-      count: 13,
-      filterList: []
+      mockData,
+      value: [],
+      options: [],
+      activity_id: 0
     }
   },
   created() {
@@ -38,65 +60,72 @@ export default {
     if (!this.activity_id) {
       this.$message.error('请先选择活动')
       setTimeout(() => { this.$router.push('/activity') }, 1000)
+      return
     }
-    this.getFilterListByActivityID()
+    console.log('------init-------')
+    initData()
+    getFilterTree(this.activity_id).then(res => {
+      console.log(res)
+      for (const item of res.Node) {
+        if (item.id !== 1) addNode(item)
+        else addRootNode(item)
+      }
+      for (const item of res.Edge) {
+        addEdge(item)
+      }
+      if (res.Node.length === 0) {
+        addRootNode({
+          field_name: 'status', table_name: 'users', condition: '=1'
+        })
+      }
+    })
+    getTbaleName().then(res => {
+      for (const item of res) {
+        const { table_name, id } = item
+        const _1 = { id, value: table_name, label: table_name, children: [] }
+        getFieldList(table_name).then(res => {
+          for (const item of res) _1.children.push({ value: item, label: item })
+          this.options.push(_1)
+        })
+      }
+    })
   },
   methods: {
-    getFilterListByActivityID() {
-      getFilterListByActivityID(this.activity_id).then(res => {
-        // 去重
-        this.filterList.splice(0, this.filterList.length)
-        for (const i of res) {
-          let f = true
-          if (this.filterList.length) {
-            for (const j of this.filterList) {
-              if (i.field_name === j.field_name &&
-                  i.value_range === j.value_range
-              ) {
-                f = false
-                break
-              }
-            }
-          }
-          if (f) this.filterList.push(i)
-        }
-      })
+    btnClick() {
+      console.log(mockData)
     },
-    addItem() {
-      console.log('addItem')
-      this.getFilterListByActivityID()
+    // 添加一个节点
+    handleChange(value) {
+      if (value.length > 1) {
+        addNode({
+          table_name: value[0],
+          field_name: value[1]
+        })
+      }
+      this.value = []
+    },
+    // 删除一个节点
+    deleteItem(item) { delNode(item) },
+    // 确定筛选规则
+    surehandler() {
+      this.$confirm('确定这套筛选规则？').then(() => {
+        sureSift({ data: this.mockData, activity_id: this.activity_id }).then(({ nodes, edges }) => {
+          console.log(nodes, edges)
+          finishFilterConfiguration({
+            activity_id: this.activity_id,
+            node: nodes,
+            edge: edges
+          }).then(res => {
+            this.$message.success('筛选规则添加成功')
+            setTimeout(() => { this.$router.push('/activity') }, 1000)
+          })
+        })
+      }).catch(() => {})
     }
   }
 }
 </script>
 
 <style scoped>
-  .el-header {
-    background-color: #B3C0D1;
-    color: #333;
-    text-align: center;
-    line-height: 60px;
-  }
-  .el-footer {
-    background-color: #B3C0D1;
-    color: #333;
-    text-align: center;
-    line-height: 60px;
-  }
-  .el-container >>> .el-aside {
-    position: relative;
-    background: white;
-    height: calc(100vh - 144px);
-    margin-bottom: 0;
-    color: #333;
-    text-align: center;
-  }
 
-  .el-main {
-    height: calc(100vh - 144px);
-    margin-bottom: 0;
-    color: #333;
-    text-align: center;
-    border-left: 20px solid #B3C0D1;
-  }
 </style>

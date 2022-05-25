@@ -25,6 +25,7 @@ import bannerRouter from './modules/banner'
 import checkRouter from './modules/check'
 import tweetRouter from './modules/tweet'
 import siftRouter from './modules/sift'
+// import testRouter from './modules/test'
 export const asyncRoutes = [
   siftRouter,
   tweetRouter,
@@ -33,6 +34,7 @@ export const asyncRoutes = [
   activityRouter,
   permissionRouter,
   checkRouter,
+  // testRouter,
   { path: '*', redirect: '/404', hidden: true }
 ]
 

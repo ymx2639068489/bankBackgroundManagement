@@ -24,7 +24,7 @@ export default {
   },
   data() {
     return {
-      title: '三 湘 银 行 后 台',
+      title: '银 行 后 台',
       logo: require('@/assets/images/logo.png')
     }
   }

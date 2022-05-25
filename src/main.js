@@ -8,6 +8,7 @@ import Element from 'element-ui'
 import './styles/element-variables.scss'
 
 import '@/styles/index.scss'
+import 'butterfly-dag/dist/index.css'
 
 import App from './App'
 import store from './store'
@@ -20,6 +21,7 @@ import './utils/error-log'
 import * as filters from './filters'
 import * as echarts from 'echarts'
 Vue.prototype.$echarts = echarts
+
 import md5 from 'js-md5'
 Vue.prototype.$md5 = md5
 Vue.prototype.$IsoToString = iso => {

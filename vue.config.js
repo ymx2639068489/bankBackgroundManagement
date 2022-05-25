@@ -1,7 +1,7 @@
 'use strict'
 const path = require('path')
 const defaultSettings = require('./src/settings.js')
-
+const webpack = require('webpack')
 function resolve(dir) {
   return path.join(__dirname, dir)
 }
@@ -11,6 +11,7 @@ const name = defaultSettings.title || 'func' // page title
 const port = process.env.port || process.env.npm_config_port || 9527
 
 module.exports = {
+  runtimeCompiler: true,
   publicPath: '/', // 这里对应需求必须要更改
   outputDir: 'func',
   assetsDir: 'static',
@@ -33,7 +34,7 @@ module.exports = {
         }
       },
       '/api': {
-        target: 'http://161.189.104.71:8888/',
+        target: 'https://162.14.115.114:8000/',
         secure: false,
         changeOrigin: true,
         pathRewrite: {
@@ -48,7 +49,15 @@ module.exports = {
       alias: {
         '@': resolve('src')
       }
-    }
+    },
+    plugins: [
+      new webpack.ProvidePlugin({
+        $: 'jquery',
+        jQuery: 'jquery',
+        'window.jQuery': 'jquery',
+        'window.$': 'jquery'
+      })
+    ]
   },
   chainWebpack(config) {
     config.plugin('preload').tap(() => [
